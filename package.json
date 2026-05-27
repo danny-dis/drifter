@@ -1,0 +1,26 @@
+{
+  "name": "drifter",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A cross-platform AI desktop/mobile agent — your persistent AI companion",
+  "workspaces": [
+    "frontend",
+    "electron"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w frontend",
+    "dev:electron": "npm run dev -w electron",
+    "build": "npm run build -w frontend && npm run build -w electron",
+    "build:frontend": "npm run build -w frontend",
+    "backend:dev": "cd backend && uv run python -m src.main",
+    "backend:install": "cd backend && uv sync",
+    "cap:sync": "npx cap sync",
+    "cap:android": "npx cap run android",
+    "cap:ios": "npx cap run ios",
+    "lint": "npm run lint -w frontend",
+    "typecheck": "npm run typecheck -w frontend"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
