@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Drifter</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="app">
+    <header id="topbar">
+      <div id="crab-info">
+        <span id="crab-name">???</span>
+        <span id="crab-status" class="status">idle</span>
+      </div>
+      <div id="controls">
+        <button id="btn-pause" title="Pause/Resume">⏸</button>
+        <button id="btn-new" title="New creature">+</button>
+      </div>
+    </header>
+
+    <main id="main">
+      <section id="room-pane">
+        <canvas id="room-canvas" width="480" height="480"></canvas>
+        <div id="activity-bubble" class="bubble hidden"></div>
+      </section>
+
+      <section id="chat-pane">
+        <div id="chat-scroll">
+          <div id="chat-feed"></div>
+        </div>
+        <form id="chat-form">
+          <input id="chat-input" type="text" placeholder="Talk to your drifter..." autocomplete="off" />
+          <button type="submit" id="chat-send">Send</button>
+        </form>
+      </section>
+    </main>
+
+    <!-- Onboarding overlay -->
+    <div id="onboarding" class="overlay">
+      <div class="overlay-card">
+        <h1>Welcome to Drifter</h1>
+        <p>A tiny AI creature that lives in your browser. It thinks, researches, creates — all on its own.</p>
+        <label for="onboard-name">Name your drifter:</label>
+        <input id="onboard-name" type="text" maxlength="20" placeholder="e.g. Coral, Pippin, Glimmer..." />
+        <p class="hint">Now mash your keyboard for a few seconds to generate its personality.</p>
+        <input id="onboard-entropy" type="text" placeholder="type random keys here..." autocomplete="off" />
+        <button id="onboard-go" disabled>Bring it to life</button>
+        <div id="entropy-meter"><div id="entropy-fill"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Puter.js: provides free AI (user-pays model, no API key) -->
+  <script src="https://js.puter.com/v2/"></script>
+  <script src="js/genome.js"></script>
+  <script src="js/memory.js"></script>
+  <script src="js/room.js"></script>
+  <script src="js/thinker.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
