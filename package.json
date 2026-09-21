@@ -1,0 +1,23 @@
+{
+  "name": "drifter",
+  "version": "0.0.1",
+  "description": "A tiny AI creature that lives in your browser tab. Built on puter.js — no backend, no API key.",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve . -l 8000",
+    "test": "node test/static-check.js && node test/runtime-check.js",
+    "test:static": "node test/static-check.js",
+    "test:runtime": "node test/runtime-check.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/danny-dis/drifter.git"
+  },
+  "keywords": ["ai", "agent", "puter", "browser", "creature", "autonomous"],
+  "author": "danny-dis",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/danny-dis/drifter/issues"
+  },
+  "homepage": "https://github.com/danny-dis/drifter#readme"
+}

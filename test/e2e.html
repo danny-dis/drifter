@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Drifter E2E Test</title>
+  <style>
+    body { font-family: monospace; padding: 20px; background: #1a1a2e; color: #e8e8e8; }
+    .pass { color: #2ecc71; }
+    .fail { color: #e74c3c; }
+    .info { color: #3498db; }
+    #results { white-space: pre-wrap; margin-top: 20px; }
+    h2 { border-bottom: 1px solid #555; padding-bottom: 8px; }
+  </style>
+</head>
+<body>
+  <h1>🧪 Drifter E2E Test Suite</h1>
+  <div id="status">Loading...</div>
+  <div id="results"></div>
+
+  <script src="https://js.puter.com/v2/"></script>
+  <script src="js/genome.js"></script>
+  <script src="js/memory.js"></script>
+  <script src="js/thinker.js"></script>
+  <script>
+  (async () => {
+    const results = [];
+    let pass = 0, fail = 0;
+
+    function ok(name, cond, detail) {
+      if (cond) { pass++; results.push(`  ✓ ${name}`); }
+      else { fail++; results.push(`  ✗ ${name}${detail ? ': ' + detail : ''}`); }
+    }
+
+    // ---- 1. Genome ----
+    results.push('\n--- Genome ---');
+    const g = await DrifterGenome.generateGenome('Coral', 'abc123def456');
+    ok('genome has 3 domains', g.traits.domains.length === 3);
+    ok('genome has 2 styles', g.traits.thinking_styles.length === 2);
+    ok('genome has temperament', !!g.traits.temperament);
+    ok('genome has animal', !!g.animal);
+
+    const g2 = await DrifterGenome.generateGenome('Coral', 'abc123def456');
+    ok('genome deterministic', g.hash === g2.hash);
+
+    const g3 = await DrifterGenome.generateGenome('Coral', 'xyz789');
+    ok('genome varies', g.hash !== g3.hash);
+
+    const mood = DrifterGenome.randomMood();
+    ok('mood valid', !!mood.label && !!mood.nudge);
+
+    // ---- 2. Memory ----
+    results.push('\n--- Memory ---');
+    const mem = new DrifterMemory.MemoryStream('test');
+    ok('memory empty', mem.size === 0);
+
+    await mem.add('I discovered a new pattern in primes');
+    ok('memory size 1', mem.size === 1);
+    ok('importance sum > 0', mem.importanceSum > 0);
+
+    await mem.add('The weather is nice today');
+    ok('memory size 2', mem.size === 2);
+
+    // Persistence
+    const raw = localStorage.getItem('drifter_memories_test');
+    ok('persists to localStorage', !!raw);
+    ok('persisted data valid', JSON.parse(raw).length === 2);
+
+    // Retrieval
+    const retrieved = await mem.retrieve('prime numbers');
+    ok('retrieval works', retrieved.length > 0);
+
+    // Reflection threshold
+    ok('shouldReflect false initially', !mem.shouldReflect(50));
+    mem.importanceSum = 100;
+    ok('shouldReflect true at 100', mem.shouldReflect(50));
+    mem.resetImportanceSum();
+    ok('reset works', mem.importanceSum === 0);
+
+    // ---- 3. Cosine similarity ----
+    results.push('\n--- Math ---');
+    const sim = DrifterMemory.cosineSim([1,0,1,0], [1,0,1,0]);
+    ok('cosine same = 1', Math.abs(sim - 1) < 0.01);
+    const sim0 = DrifterMemory.cosineSim([1,0,0,0], [0,1,0,0]);
+    ok('cosine orthogonal = 0', Math.abs(sim0) < 0.01);
+
+    // ---- 4. Workspace ----
+    results.push('\n--- Workspace ---');
+    const ws = new DrifterThinker.Workspace('test');
+    ws.writeFile('test.md', '# Hello World');
+    const content = ws.readFile('test.md');
+    ok('write_file works', content === '# Hello World');
+
+    const files = ws.listFiles();
+    ok('list_files works', files.includes('test.md'));
+    ok('list_files sorted', files.indexOf('projects.md') < files.indexOf('test.md'));
+
+    const missing = ws.readFile('nonexistent.md');
+    ok('read_file missing returns error', missing.includes('not found'));
+
+    // ---- 5. Puters.js AI call ----
+    results.push('\n--- Puter.js AI ---');
+    try {
+      const resp = await puter.ai.chat('Say hi in 3 words', { model: 'gpt-5.4-nano' });
+      ok('puter.ai.chat works', !!resp && resp.length > 0);
+    } catch (e) {
+      ok('puter.ai.chat works', false, e.message);
+    }
+
+    // ---- 6. Thinker construction ----
+    results.push('\n--- Thinker ---');
+    const tGenome = { name: 'TestBot', traits: { temperament: 'test', thinking_styles: ['x'], domains: ['y'] } };
+    const tMem = new DrifterMemory.MemoryStream('t');
+    let lastEvt = null;
+    const tRoom = {
+      moveTo: () => {},
+      setActivity: () => {},
+      showBubble: () => {},
+      position: { x: 5, y: 5 }
+    };
+    const thinker = new DrifterThinker.DrifterThinker.Thinker(tGenome, tMem, tRoom, {
+      onEvent: e => { lastEvt = e; }
+    });
+    ok('thinker constructs', !!thinker);
+    ok('thinker has workspace', !!thinker.workspace);
+    ok('thinker model default', thinker.model === 'gpt-5.4-nano');
+
+    // ---- 7. Think cycle ----
+    results.push('\n--- Think Cycle ---');
+    try {
+      await thinker._thinkCycle();
+      ok('think cycle completes', true);
+      ok('memory has thought', tMem.size > 0);
+      ok('event emitted', lastEvt !== null);
+    } catch (e) {
+      ok('think cycle completes', false, e.message);
+    }
+
+    // ---- Summary ----
+    results.push(`\n--- Summary: ${pass} passed, ${fail} failed ---`);
+    document.getElementById('status').innerHTML =
+      fail === 0
+        ? `<h2 class="pass">✓ ALL TESTS PASSED (${pass})</h2>`
+        : `<h2 class="fail">✗ ${fail} TEST(S) FAILED</h2>`;
+    document.getElementById('results').textContent = results.join('\n');
+  })().catch(e => {
+    document.getElementById('status').innerHTML = `<h2 class="fail">FATAL: ${e.message}</h2>`;
+    document.getElementById('results').textContent = e.stack;
+  });
+  </script>
+</body>
+</html>
